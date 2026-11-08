@@ -6,21 +6,21 @@
     <title>OnlinePlat</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { background: #0f172a; color: #f8fafc; font-family: sans-serif; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0f172a; z-index: 10; padding: 20px; text-align: center; }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0f172a; z-index: 100; padding: 20px; text-align: center; }
         .screen.hidden { display: none !important; }
         
-        h1 { font-size: 2.5rem; margin-bottom: 10px; color: #38bdf8; }
-        .instructions { font-size: 0.95rem; color: #94a3b8; margin-bottom: 20px; line-height: 1.5; background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #475569; max-width: 320px; }
-        .btn { background: #2563eb; color: white; border: none; padding: 12px 24px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; margin: 6px; font-weight: bold; width: 250px; }
-        .btn:hover { background: #1d4ed8; }
+        h1 { font-size: 2.2rem; margin-bottom: 10px; color: #38bdf8; }
+        .instructions { font-size: 0.9rem; color: #94a3b8; margin-bottom: 15px; line-height: 1.4; background: #1e293b; padding: 10px; border-radius: 8px; border: 1px solid #475569; max-width: 320px; text-align: left; }
+        .btn { background: #2563eb; color: white; border: none; padding: 14px 24px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; margin: 8px; font-weight: bold; width: 260px; z-index: 110; touch-action: manipulation; }
+        .btn:active { background: #1d4ed8; transform: scale(0.98); }
         .btn-secondary { background: #475569; }
         
-        input { padding: 12px; font-size: 1rem; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: white; margin: 6px; width: 250px; text-align: center; }
+        input { padding: 14px; font-size: 1rem; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: white; margin: 8px; width: 260px; text-align: center; z-index: 110; }
         
-        #game-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; }
+        #game-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; z-index: 1; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid #334155; z-index: 5; }
         .header-controls { display: flex; align-items: center; gap: 10px; position: relative; }
         
@@ -29,19 +29,25 @@
         
         .icon-btn { background: #334155; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 1rem; }
         
-        #target-voice-container { position: absolute; top: 50px; right: 0; background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 10px; width: 220px; max-height: 150px; overflow-y: auto; z-index: 20; display: none; }
+        #target-voice-container { position: absolute; top: 50px; right: 0; background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 10px; width: 220px; max-height: 150px; overflow-y: auto; z-index: 200; display: none; }
         #target-voice-container h4 { font-size: 0.85rem; margin-bottom: 6px; color: #94a3b8; border-bottom: 1px solid #334155; padding-bottom: 4px; }
         .target-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; margin: 4px 0; }
 
         canvas { flex-grow: 1; display: block; background: #1e293b; }
 
-        #mobile-controls { position: absolute; bottom: 20px; width: 100%; display: none; justify-content: space-between; padding: 0 30px; z-index: 5; pointer-events: none; }
-        .touch-group { display: flex; gap: 15px; pointer-events: auto; }
-        .touch-btn { width: 70px; height: 70px; background: rgba(51, 65, 85, 0.8); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; color: white; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
+        #emote-panel { position: absolute; bottom: 110px; left: 20px; background: rgba(30, 41, 59, 0.9); border: 1px solid #475569; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        #emote-panel h4 { font-size: 0.8rem; color: #94a3b8; text-align: center; margin-bottom: 2px; }
+        .emote-btn { background: #334155; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: bold; text-align: left; }
+        .emote-btn:hover { background: #2563eb; }
 
-        #settings-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 30; }
-        .modal-content { background: #1e293b; padding: 30px; border-radius: 12px; width: 380px; border: 1px solid #475569; display: flex; flex-direction: column; gap: 15px; }
-        .setting-row { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; }
+        #mobile-controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; z-index: 10; pointer-events: none; }
+        .touch-group { display: flex; gap: 15px; pointer-events: auto; }
+        .touch-btn { width: 70px; height: 70px; background: rgba(51, 65, 85, 0.85); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; color: white; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; touch-action: manipulation; }
+        .touch-btn:active { background: rgba(37, 99, 235, 0.9); }
+
+        #settings-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 300; }
+        .modal-content { background: #1e293b; padding: 30px; border-radius: 12px; width: 380px; border: 1px solid #475569; display: flex; flex-direction: column; gap: 15px; max-height: 90vh; overflow-y: auto; }
+        .setting-row { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; text-align: left; }
     </style>
 </head>
 <body>
@@ -49,20 +55,21 @@
     <div id="mode-screen" class="screen">
         <h1>OnlinePlat</h1>
         <div class="instructions">
-            <b>【操作方法】</b><br>
-            PC: 矢印キー (左右) で移動、[Space] または [↑] でジャンプ<br>
-            スマホ: 画面下のボタンで操作
+            <b>【操作方法 (szxc)】</b><br>
+            ・<b>Z</b>: 左移動 / <b>X</b>: 右移動<br>
+            ・<b>C</b>: ジャンプ / <b>S</b>: 下・しゃがみ<br>
+            ※画面下ボタンや左下の「エモートリスト」も使用可能！
         </div>
         <input type="text" id="player-name" placeholder="プレイヤー名" value="Player">
-        <button class="btn" onclick="selectMode('offline')">オフライン</button>
-        <button class="btn" onclick="selectMode('online')">オンライン</button>
+        <button class="btn" onclick="startOfflineMode()">オフライン</button>
+        <button class="btn" onclick="startOnlineMode()">オンライン</button>
         <button class="btn btn-secondary" onclick="showPrivateMenu()">プライベート</button>
     </div>
 
     <div id="private-screen" class="screen hidden">
         <h1>プライベート部屋</h1>
         <input type="text" id="room-code-input" placeholder="部屋番号 (例: 1234)">
-        <button class="btn" onclick="joinPrivate()">ホスト / 入出</button>
+        <button class="btn" onclick="startPrivateMode()">ホスト / 入出</button>
         <button class="btn btn-secondary" onclick="backToMain()">戻る</button>
     </div>
 
@@ -85,15 +92,24 @@
             </div>
         </header>
 
+        <div id="emote-panel">
+            <h4>💬 エモート</h4>
+            <button class="emote-btn" onclick="sendEmote('👍 ナイス！')">👍 ナイス！</button>
+            <button class="emote-btn" onclick="sendEmote('😂 草w')">😂 草w</button>
+            <button class="emote-btn" onclick="sendEmote('🔥 やる気！')">🔥 やる気！</button>
+            <button class="emote-btn" onclick="sendEmote('💖 ありがと')">💖 ありがと</button>
+            <button class="emote-btn" onclick="sendEmote('👋 お疲れ！')">👋 お疲れ！</button>
+        </div>
+
         <canvas id="gameCanvas"></canvas>
 
         <div id="mobile-controls">
             <div class="touch-group">
-                <div class="touch-btn" ontouchstart="keys.ArrowLeft=true" ontouchend="keys.ArrowLeft=false">◀</div>
-                <div class="touch-btn" ontouchstart="keys.ArrowRight=true" ontouchend="keys.ArrowRight=false">▶</div>
+                <div class="touch-btn" id="btn-left">Z</div>
+                <div class="touch-btn" id="btn-right">X</div>
             </div>
             <div class="touch-group">
-                <div class="touch-btn" ontouchstart="keys.Space=true" ontouchend="keys.Space=false">▲</div>
+                <div class="touch-btn" id="btn-jump">C</div>
             </div>
         </div>
     </div>
@@ -101,6 +117,11 @@
     <div id="settings-modal">
         <div class="modal-content">
             <h3 style="color: #38bdf8;">設定</h3>
+            <div class="setting-row">
+                <label>BGM アーティスト名 (200曲検索):</label>
+                <input type="text" id="artist-input" value="Dragon Quest" style="width: 100%;">
+                <button class="btn" style="width: 100%; padding: 10px; margin-top: 5px;" onclick="changeArtist()">アーティスト変更して更新</button>
+            </div>
             <div class="setting-row">
                 <label>BGM 音量: <span id="bgm-val">50</span>%</label>
                 <input type="range" min="0" max="100" value="50" oninput="updateBgmVolume(this.value)">
@@ -117,18 +138,40 @@
                 <label>相手の声の音量: <span id="voice-vol-val">80</span>%</label>
                 <input type="range" min="0" max="100" value="80" oninput="updateVoiceVolume(this.value)">
             </div>
-            <button class="btn btn-secondary" onclick="closeSettings()">閉じる</button>
-            <button class="btn" style="background: #ef4444;" onclick="location.reload()">ゲームを退出</button>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="closeSettings()">閉じる</button>
+            <button class="btn" style="background: #ef4444; width: 100%;" onclick="location.reload()">ゲームを退出</button>
         </div>
     </div>
 
     <audio id="bgm-player" autoplay></audio>
 
     <script>
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent) || window.innerWidth < 768;
-        if (isMobile) {
-            document.getElementById('mobile-controls').style.display = 'flex';
+        const keys = {};
+
+        window.addEventListener('keydown', e => { 
+            keys[e.code] = true; 
+            keys[e.key.toLowerCase()] = true; 
+        });
+        window.addEventListener('keyup', e => { 
+            keys[e.code] = false; 
+            keys[e.key.toLowerCase()] = false; 
+        });
+
+        function setupTouchButton(id, keyName1, keyName2) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const start = (e) => { e.preventDefault(); keys[keyName1] = true; keys[keyName2] = true; };
+            const end = (e) => { e.preventDefault(); keys[keyName1] = false; keys[keyName2] = false; };
+            el.addEventListener('mousedown', start);
+            el.addEventListener('mouseup', end);
+            el.addEventListener('mouseleave', end);
+            el.addEventListener('touchstart', start, {passive: false});
+            el.addEventListener('touchend', end, {passive: false});
         }
+
+        setupTouchButton('btn-left', 'KeyZ', 'ArrowLeft');
+        setupTouchButton('btn-right', 'KeyX', 'ArrowRight');
+        setupTouchButton('btn-jump', 'KeyC', 'Space');
 
         let socket = null;
         let gameMode = 'offline';
@@ -145,12 +188,30 @@
         let localStream = null;
         let peerConnections = {};
         let selectedVoiceTargets = 'all';
+        let currentArtist = 'Dragon Quest';
+        let myEmote = '';
+        let emoteTimer = null;
 
-        async function initBGM() {
+        window.addEventListener('DOMContentLoaded', () => {
+            initBGM(currentArtist);
+            const startAudio = () => {
+                const player = document.getElementById('bgm-player');
+                if (player.paused && bgmTracks.length > 0) {
+                    player.play().catch(e => {});
+                }
+                window.removeEventListener('click', startAudio);
+                window.removeEventListener('touchstart', startAudio);
+            };
+            window.addEventListener('click', startAudio);
+            window.addEventListener('touchstart', startAudio);
+        });
+
+        async function initBGM(artist) {
             try {
-                const res = await fetch('/api/bgm-tracks');
+                const res = await fetch(`/api/bgm-tracks?artist=${encodeURIComponent(artist)}`);
                 const data = await res.json();
                 bgmTracks = data.tracks || [];
+                currentTrackIndex = 0;
                 if (bgmTracks.length > 0) playNextBgm();
             } catch (e) {}
         }
@@ -165,10 +226,30 @@
             if (bgmTracks.length === 0) return;
             bgmPlayer.src = bgmTracks[currentTrackIndex].previewUrl;
             bgmPlayer.volume = bgmVolume;
-            bgmPlayer.play().catch(e => {
-                // ブラウザの自動再生ブロック対策: 画面をクリックしたらBGMを再生
-                document.addEventListener('click', () => { bgmPlayer.play(); }, { once: true });
-            });
+            bgmPlayer.play().catch(e => {});
+        }
+
+        function changeArtist() {
+            const inputVal = document.getElementById('artist-input').value.trim();
+            if (inputVal) {
+                currentArtist = inputVal;
+                initBGM(currentArtist);
+                alert(`アーティスト「${currentArtist}」の曲を200曲検索してループ再生します！`);
+            }
+        }
+
+        function sendEmote(text) {
+            myEmote = text;
+            if (socket && socket.connected) {
+                socket.emit('player_emote', myEmote);
+            }
+            if (emoteTimer) clearTimeout(emoteTimer);
+            emoteTimer = setTimeout(() => {
+                myEmote = '';
+                if (socket && socket.connected) {
+                    socket.emit('player_emote', '');
+                }
+            }, 3500);
         }
 
         function updateBgmVolume(val) { bgmVolume = val / 100; bgmPlayer.volume = bgmVolume; document.getElementById('bgm-val').innerText = val; }
@@ -178,12 +259,6 @@
             voiceVolume = val / 100; 
             document.getElementById('voice-vol-val').innerText = val;
             document.querySelectorAll('audio.peer-audio').forEach(el => el.volume = voiceVolume);
-        }
-
-        function selectMode(mode) {
-            gameMode = mode;
-            playerName = document.getElementById('player-name').value || 'Player';
-            startGame();
         }
 
         function showPrivateMenu() {
@@ -196,22 +271,25 @@
             document.getElementById('mode-screen').classList.remove('hidden');
         }
 
-        function joinPrivate() {
-            const code = document.getElementById('room-code-input').value;
+        function startOfflineMode() { gameMode = 'offline'; startGame(); }
+        function startOnlineMode() { gameMode = 'online'; startGame(); }
+        function startPrivateMode() {
+            const code = document.getElementById('room-code-input').value.trim();
             if (!code) { alert('部屋番号を入力してください'); return; }
             roomCode = code;
             gameMode = 'private';
-            playerName = document.getElementById('player-name').value || 'Player';
             startGame();
         }
 
         function startGame() {
+            const nameInput = document.getElementById('player-name').value.trim();
+            if (nameInput) playerName = nameInput;
+
             document.getElementById('mode-screen').classList.add('hidden');
             document.getElementById('private-screen').classList.add('hidden');
             document.getElementById('game-ui').style.display = 'flex';
             document.getElementById('room-info').innerText = `OnlinePlat - ${gameMode.toUpperCase()} ${roomCode ? '('+roomCode+')':''}`;
 
-            initBGM();
             initSocket();
             initCanvas();
             initMic();
@@ -221,14 +299,37 @@
             socket = io();
             socket.on('connect', () => {
                 myId = socket.id;
-                socket.emit('join_room', { mode: gameMode, roomCode: roomCode, playerData: { name: playerName, x: 100, y: 100, color: '#38bdf8' } });
+                socket.emit('join_room', { mode: gameMode, roomCode: roomCode, playerData: { name: playerName, x: 100, y: 1500, color: '#38bdf8', emote: '' } });
             });
             socket.on('update_players', (serverPlayers) => {
                 players = serverPlayers;
                 updateTargetCheckboxes();
+                syncVoiceConnections();
             });
             socket.on('player_moved', ({ id, data }) => {
-                if (players[id]) { players[id].x = data.x; players[id].y = data.y; }
+                if (players[id]) { 
+                    players[id].x = data.x; 
+                    players[id].y = data.y; 
+                    players[id].emote = data.emote;
+                }
+            });
+            socket.on('voice_signal', async ({ signal, from, targetOnly }) => {
+                if (targetOnly && targetOnly !== 'all' && !targetOnly.includes(myId)) return;
+                let pc = peerConnections[from] || createPeerConnection(from);
+                if (signal.sdp) {
+                    await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                    if (signal.sdp.type === 'offer') {
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        socket.emit('voice_signal', { to: from, signal: { sdp: pc.localDescription }, from: myId, targetOnly: selectedVoiceTargets });
+                    }
+                } else if (signal.candidate) {
+                    await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                }
+            });
+
+            window.addEventListener('beforeunload', () => {
+                if (socket) socket.disconnect();
             });
         }
 
@@ -240,12 +341,50 @@
         }
 
         function toggleMic() {
-            if (!localStream) { alert('マイクが検出されません'); return; }
+            if (!localStream) { alert('マイクが許可されていないか接続されていません。'); return; }
             micActive = !micActive;
             localStream.getAudioTracks()[0].enabled = micActive;
             const btn = document.getElementById('mic-toggle-btn');
             btn.innerText = micActive ? 'マイク ON' : 'マイク OFF';
             btn.classList.toggle('active', micActive);
+        }
+
+        function createPeerConnection(id) {
+            const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+            if (localStream) {
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            }
+            pc.onicecandidate = event => {
+                if (event.candidate) {
+                    socket.emit('voice_signal', { to: id, signal: { candidate: event.candidate }, from: myId, targetOnly: selectedVoiceTargets });
+                }
+            };
+            pc.ontrack = event => {
+                let audio = document.getElementById('audio_' + id);
+                if (!audio) {
+                    audio = document.createElement('audio');
+                    audio.id = 'audio_' + id;
+                    audio.className = 'peer-audio';
+                    audio.autoplay = true;
+                    audio.volume = voiceVolume;
+                    document.body.appendChild(audio);
+                }
+                audio.srcObject = event.streams[0];
+            };
+            peerConnections[id] = pc;
+            return pc;
+        }
+
+        async function syncVoiceConnections() {
+            if (!socket) return;
+            for (let id in players) {
+                if (id !== myId && !peerConnections[id]) {
+                    let pc = createPeerConnection(id);
+                    const offer = await pc.createOffer();
+                    await pc.setLocalDescription(offer);
+                    socket.emit('voice_signal', { to: id, signal: { sdp: pc.localDescription }, from: myId, targetOnly: selectedVoiceTargets });
+                }
+            }
         }
 
         function toggleTargetList() {
@@ -258,119 +397,4 @@
             container.innerHTML = '';
             for (let id in players) {
                 if (id === myId) continue;
-                const p = players[id];
-                const div = document.createElement('div');
-                div.className = 'target-item';
-                div.innerHTML = `<input type="checkbox" value="${id}" class="target-chk" checked onchange="calcVoiceTargets()"> <label>${p.name}</label>`;
-                container.appendChild(div);
-            }
-        }
-
-        function toggleAllTargets(master) {
-            document.querySelectorAll('.target-chk').forEach(c => c.checked = master.checked);
-            calcVoiceTargets();
-        }
-
-        function calcVoiceTargets() {
-            const master = document.getElementById('select-all-target');
-            if (master.checked) { selectedVoiceTargets = 'all'; return; }
-            const chks = document.querySelectorAll('.target-chk:checked');
-            selectedVoiceTargets = Array.from(chks).map(c => c.value);
-        }
-
-        const keys = {};
-        window.addEventListener('keydown', e => { keys[e.code] = true; });
-        window.addEventListener('keyup', e => { keys[e.code] = false; });
-
-        function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
-        function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
-
-        function initCanvas() {
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight - 50; }
-            window.addEventListener('resize', resize);
-            resize();
-
-            let myX = 100, myY = 100, vx = 0, vy = 0;
-            const speed = 5, jumpForce = -11, gravity = 0.5;
-            let grounded = false;
-
-            const platforms = [
-                { x: 0, y: 500, w: 2500, h: 50 },
-                { x: 300, y: 380, w: 200, h: 20 },
-                { x: 600, y: 280, w: 200, h: 20 },
-                { x: 900, y: 200, w: 250, h: 20 }
-            ];
-
-            function loop() {
-                if (keys['ArrowLeft'] || keys['KeyA']) vx = -speed;
-                else if (keys['ArrowRight'] || keys['KeyD']) vx = speed;
-                else vx = 0;
-
-                if ((keys['ArrowUp'] || keys['KeyW'] || keys['Space']) && grounded) {
-                    vy = jumpForce;
-                    grounded = false;
-                }
-
-                vy += gravity;
-                myX += vx;
-                myY += vy;
-
-                // 接地・衝突判定の修正
-                grounded = false;
-                platforms.forEach(p => {
-                    if (myX + 30 > p.x && myX < p.x + p.w && myY + 40 >= p.y && myY + 40 <= p.y + p.h + 10 && vy > 0) {
-                        myY = p.y - 40;
-                        vy = 0;
-                        grounded = true;
-                    }
-                });
-
-                // 落下時のリスポーン
-                if (myY > canvas.height + 200) {
-                    myY = 100;
-                    myX = 100;
-                    vy = 0;
-                }
-
-                if (socket && socket.connected) {
-                    socket.emit('player_move', { x: myX, y: myY });
-                }
-
-                // カメラ追従 (プレイヤーが常に画面中央になるように計算)
-                const cameraX = myX - canvas.width / 2;
-                const cameraY = myY - canvas.height / 2;
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.save();
-                ctx.translate(-cameraX, -cameraY);
-
-                // プラットフォーム描画
-                ctx.fillStyle = '#475569';
-                platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
-
-                if (players[myId]) {
-                    players[myId].x = myX;
-                    players[myId].y = myY;
-                }
-
-                // プレイヤー描画
-                for (let id in players) {
-                    const p = players[id];
-                    ctx.fillStyle = (id === myId) ? '#38bdf8' : '#f43f5e';
-                    ctx.fillRect(p.x, p.y, 30, 40);
-                    ctx.fillStyle = 'white';
-                    ctx.font = '12px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(p.name, p.x + 15, p.y - 8);
-                }
-
-                ctx.restore();
-                requestAnimationFrame(loop);
-            }
-            requestAnimationFrame(loop);
-        }
-    </script>
-</body>
-</html>
+                const p = players
