@@ -14,11 +14,11 @@
         
         h1 { font-size: 2.2rem; margin-bottom: 10px; color: #38bdf8; }
         .instructions { font-size: 0.9rem; color: #94a3b8; margin-bottom: 15px; line-height: 1.4; background: #1e293b; padding: 10px; border-radius: 8px; border: 1px solid #475569; max-width: 320px; text-align: left; }
-        .btn { background: #2563eb; color: white; border: none; padding: 14px 24px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; margin: 8px; font-weight: bold; width: 260px; touch-action: manipulation; }
+        .btn { background: #2563eb; color: white; border: none; padding: 14px 24px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; margin: 8px; font-weight: bold; width: 260px; z-index: 60; touch-action: manipulation; }
         .btn:active { background: #1d4ed8; transform: scale(0.98); }
         .btn-secondary { background: #475569; }
         
-        input { padding: 14px; font-size: 1rem; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: white; margin: 8px; width: 260px; text-align: center; }
+        input { padding: 14px; font-size: 1rem; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: white; margin: 8px; width: 260px; text-align: center; z-index: 60; }
         
         #game-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; z-index: 1; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid #334155; z-index: 5; }
@@ -47,12 +47,13 @@
 </head>
 <body>
 
+    <!-- 最初の画面（ここから音楽が鳴るようにタッチ/クリックを検知） -->
     <div id="mode-screen" class="screen">
         <h1>OnlinePlat</h1>
         <div class="instructions">
             <b>【操作方法】</b><br>
-            ・<b>移動/ジャンプ</b>: 画面下のボタンをタップ、またはPCならキーボード(A/D/Space)<br>
-            ・<b>落下時</b>: 自動でリスポーンします
+            ・<b>移動/ジャンプ</b>: 画面下のボタン、またはPCキーボード(A/D/Space)<br>
+            ・<b>BGM</b>: 画面のどこかをタッチ/クリックすると再生されます
         </div>
         <input type="text" id="player-name" placeholder="プレイヤー名" value="Player">
         <button class="btn" id="btn-offline">オフライン</button>
@@ -123,7 +124,7 @@
         </div>
     </div>
 
-    <audio id="bgm-player" autoplay></audio>
+    <audio id="bgm-player" autoplay loop></audio>
 
     <script>
         const keys = {};
@@ -163,36 +164,21 @@
         let peerConnections = {};
         let selectedVoiceTargets = 'all';
 
-        // 画面切り替え・ボタンのイベント紐付け
-        document.getElementById('btn-offline').addEventListener('click', () => selectMode('offline'));
-        document.getElementById('btn-online').addEventListener('click', () => selectMode('online'));
-        document.getElementById('btn-private-menu').addEventListener('click', () => {
-            document.getElementById('mode-screen').classList.add('hidden');
-            document.getElementById('private-screen').classList.remove('hidden');
+        // 最初の画面からBGMをロード＆自動再生トライ
+        window.addEventListener('DOMContentLoaded', () => {
+            initBGM();
+            // ユーザーが画面のどこかを最初に触った瞬間に強制再生（ブラウザ制限対策）
+            const unlockAudio = () => {
+                const player = document.getElementById('bgm-player');
+                if (player.paused && bgmTracks.length > 0) {
+                    player.play().catch(e => {});
+                }
+                window.removeEventListener('click', unlockAudio);
+                window.removeEventListener('touchstart', unlockAudio);
+            };
+            window.addEventListener('click', unlockAudio);
+            window.addEventListener('touchstart', unlockAudio);
         });
-        document.getElementById('btn-back').addEventListener('click', () => {
-            document.getElementById('private-screen').classList.add('hidden');
-            document.getElementById('mode-screen').classList.remove('hidden');
-        });
-        document.getElementById('btn-private-join').addEventListener('click', () => {
-            const code = document.getElementById('room-code-input').value;
-            if (!code) { alert('部屋番号を入力してください'); return; }
-            roomCode = code;
-            gameMode = 'private';
-            startGame();
-        });
-
-        document.getElementById('mic-toggle-btn').addEventListener('click', toggleMic);
-        document.getElementById('btn-target-toggle').addEventListener('click', toggleTargetList);
-        document.getElementById('btn-settings-open').addEventListener('click', () => document.getElementById('settings-modal').style.display = 'flex');
-        document.getElementById('btn-settings-close').addEventListener('click', () => document.getElementById('settings-modal').style.display = 'none');
-        document.getElementById('btn-exit').addEventListener('click', () => location.reload());
-        document.getElementById('select-all-target').addEventListener('change', (e) => toggleAllTargets(e.target));
-
-        document.getElementById('range-bgm').addEventListener('input', (e) => updateBgmVolume(e.target.value));
-        document.getElementById('range-sfx').addEventListener('input', (e) => updateSfxVolume(e.target.value));
-        document.getElementById('range-mic').addEventListener('input', (e) => updateMicSensitivity(e.target.value));
-        document.getElementById('range-voice').addEventListener('input', (e) => updateVoiceVolume(e.target.value));
 
         async function initBGM() {
             try {
@@ -213,15 +199,7 @@
             if (bgmTracks.length === 0) return;
             bgmPlayer.src = bgmTracks[currentTrackIndex].previewUrl;
             bgmPlayer.volume = bgmVolume;
-            bgmPlayer.play().catch(e => {
-                const resumeBgm = () => {
-                    bgmPlayer.play();
-                    window.removeEventListener('click', resumeBgm);
-                    window.removeEventListener('keydown', resumeBgm);
-                };
-                window.addEventListener('click', resumeBgm);
-                window.addEventListener('keydown', resumeBgm);
-            });
+            bgmPlayer.play().catch(e => {});
         }
 
         function updateBgmVolume(val) { bgmVolume = val / 100; bgmPlayer.volume = bgmVolume; document.getElementById('bgm-val').innerText = val; }
@@ -232,6 +210,37 @@
             document.getElementById('voice-vol-val').innerText = val;
             document.querySelectorAll('audio.peer-audio').forEach(el => el.volume = voiceVolume);
         }
+
+        // ボタンのイベントリスナー（確実に発火するように修正）
+        document.getElementById('btn-offline').addEventListener('click', () => selectMode('offline'));
+        document.getElementById('btn-online').addEventListener('click', () => selectMode('online'));
+        document.getElementById('btn-private-menu').addEventListener('click', () => {
+            document.getElementById('mode-screen').classList.add('hidden');
+            document.getElementById('private-screen').classList.remove('hidden');
+        });
+        document.getElementById('btn-back').addEventListener('click', () => {
+            document.getElementById('private-screen').classList.add('hidden');
+            document.getElementById('mode-screen').classList.remove('hidden');
+        });
+        document.getElementById('btn-private-join').addEventListener('click', () => {
+            const code = document.getElementById('room-code-input').value.trim();
+            if (!code) { alert('部屋番号を入力してください'); return; }
+            roomCode = code;
+            gameMode = 'private';
+            startGame();
+        });
+
+        document.getElementById('mic-toggle-btn').addEventListener('click', toggleMic);
+        document.getElementById('btn-target-toggle').addEventListener('click', toggleTargetList);
+        document.getElementById('btn-settings-open').addEventListener('click', () => document.getElementById('settings-modal').style.display = 'flex');
+        document.getElementById('btn-settings-close').addEventListener('click', () => document.getElementById('settings-modal').style.display = 'none');
+        document.getElementById('btn-exit').addEventListener('click', () => location.reload());
+        document.getElementById('select-all-target').addEventListener('change', (e) => toggleAllTargets(e.target));
+
+        document.getElementById('range-bgm').addEventListener('input', (e) => updateBgmVolume(e.target.value));
+        document.getElementById('range-sfx').addEventListener('input', (e) => updateSfxVolume(e.target.value));
+        document.getElementById('range-mic').addEventListener('input', (e) => updateMicSensitivity(e.target.value));
+        document.getElementById('range-voice').addEventListener('input', (e) => updateVoiceVolume(e.target.value));
 
         function selectMode(mode) {
             gameMode = mode;
@@ -247,7 +256,6 @@
             document.getElementById('game-ui').style.display = 'flex';
             document.getElementById('room-info').innerText = `OnlinePlat - ${gameMode.toUpperCase()} ${roomCode ? '('+roomCode+')':''}`;
 
-            initBGM();
             initSocket();
             initCanvas();
             initMic();
@@ -257,7 +265,8 @@
             socket = io();
             socket.on('connect', () => {
                 myId = socket.id;
-                socket.emit('join_room', { mode: gameMode, roomCode: roomCode, playerData: { name: playerName, x: 100, y: 100, color: '#38bdf8' } });
+                // 初期位置を地面（y: 450付近）に合わせる
+                socket.emit('join_room', { mode: gameMode, roomCode: roomCode, playerData: { name: playerName, x: 100, y: 400, color: '#38bdf8' } });
             });
             socket.on('update_players', (serverPlayers) => {
                 players = serverPlayers;
@@ -280,6 +289,11 @@
                 } else if (signal.candidate) {
                     await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
                 }
+            });
+
+            // タブをいきなり閉じたりリロードしたとき即座にサーバーから切断・削除させる
+            window.addEventListener('beforeunload', () => {
+                if (socket) socket.disconnect();
             });
         }
 
@@ -375,20 +389,5 @@
             window.addEventListener('resize', resize);
             resize();
 
-            let myX = 100, myY = 100, vx = 0, vy = 0;
-            const speed = 6, jumpForce = -12, gravity = 0.55;
-            let grounded = false;
-
-            const platforms = [
-                { x: -500, y: 500, w: 3500, h: 50 },
-                { x: 300, y: 380, w: 200, h: 20 },
-                { x: 600, y: 280, w: 200, h: 20 },
-                { x: 900, y: 200, w: 250, h: 20 }
-            ];
-
-            function loop() {
-                if (keys['ArrowLeft'] || keys['KeyA'] || keys['a']) vx = -speed;
-                else if (keys['ArrowRight'] || keys['KeyD'] || keys['d']) vx = speed;
-                else vx = 0;
-
-                if ((keys['ArrowUp'] || keys['Ke
+            // 初期位置を地面の上(y: 400)に設定し、空中浮遊を解消
+            let myX
