@@ -11,12 +11,16 @@ const io = new Server(server, {
     pingInterval: 10000
 });
 
-// 同じ階層のファイルを静的配信
+// index.htmlと静的ファイルを確実にルートで配信
 app.use(express.static(path.join(__dirname)));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 const rooms = {};
 
-// iTunes Search APIで曲を取得（CORS完全回避）
+// iTunes Search API経由で指定アーティストのBGMを取得
 function fetchITunesTracks(artistName) {
     return new Promise((resolve) => {
         const query = encodeURIComponent(artistName || "Dragon Quest");
@@ -74,6 +78,7 @@ app.get('/api/bgm-tracks', async (req, res) => {
     res.json({ tracks: extendedTracks.slice(0, 200) });
 });
 
+// Socket.io リアルタイム通信設定
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
