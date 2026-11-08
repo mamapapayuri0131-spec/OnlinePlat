@@ -48,6 +48,8 @@
         #settings-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 2000; pointer-events: auto; }
         .modal-content { background: #1e293b; padding: 30px; border-radius: 12px; width: 380px; border: 1px solid #475569; display: flex; flex-direction: column; gap: 15px; max-height: 90vh; overflow-y: auto; pointer-events: auto; }
         .setting-row { display: flex; flex-direction: column; gap: 5px; font-size: 0.9rem; text-align: left; }
+
+        .version-tag { position: fixed; bottom: 12px; right: 15px; color: #64748b; font-size: 0.85rem; font-weight: bold; z-index: 2000; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -142,6 +144,8 @@
             <button class="btn" style="background: #ef4444; width: 100%;" onclick="location.reload()">ゲームを退出</button>
         </div>
     </div>
+
+    <div class="version-tag">v0.0.0</div>
 
     <audio id="bgm-player" autoplay></audio>
 
@@ -337,11 +341,26 @@
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 localStream.getAudioTracks()[0].enabled = false;
-            } catch (e) {}
+            } catch (e) {
+                console.log('Mic permission denied or unavailable:', e);
+            }
         }
 
         function toggleMic() {
-            if (!localStream) { alert('マイクが許可されていないか接続されていません。'); return; }
+            if (!localStream) { 
+                navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+                    localStream = stream;
+                    localStream.getAudioTracks()[0].enabled = true;
+                    micActive = true;
+                    const btn = document.getElementById('mic-toggle-btn');
+                    btn.innerText = 'マイク ON';
+                    btn.classList.add('active');
+                    syncVoiceConnections();
+                }).catch(err => {
+                    alert('ブラウザの設定でマイクの使用がブロックされています。アドレスバーのマイクアイコンから許可してください。');
+                });
+                return; 
+            }
             micActive = !micActive;
             localStream.getAudioTracks()[0].enabled = micActive;
             const btn = document.getElementById('mic-toggle-btn');
@@ -367,26 +386,4 @@
                     audio.className = 'peer-audio';
                     audio.autoplay = true;
                     audio.volume = voiceVolume;
-                    document.body.appendChild(audio);
-                }
-                audio.srcObject = event.streams[0];
-            };
-            peerConnections[id] = pc;
-            return pc;
-        }
-
-        async function syncVoiceConnections() {
-            if (!socket) return;
-            for (let id in players) {
-                if (id !== myId && !peerConnections[id]) {
-                    let pc = createPeerConnection(id);
-                    const offer = await pc.createOffer();
-                    await pc.setLocalDescription(offer);
-                    socket.emit('voice_signal', { to: id, signal: { sdp: pc.localDescription }, from: myId, targetOnly: selectedVoiceTargets });
-                }
-            }
-        }
-
-        function toggleTargetList() {
-            const el = document.getElementById('target-voice-container');
-            el.style.display = el.style.display ==
+                    docu
