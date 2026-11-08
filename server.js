@@ -11,7 +11,6 @@ const io = new Server(server, {
     pingInterval: 10000
 });
 
-// index.htmlと静的ファイルを確実にルートで配信
 app.use(express.static(path.join(__dirname)));
 
 app.get('/', (req, res) => {
@@ -20,45 +19,48 @@ app.get('/', (req, res) => {
 
 const rooms = {};
 
-// iTunes Search API経由で指定アーティストのBGMを取得
-function fetchITunesTracks(artistName) {
+// リダイレクトを確実に追従してiTunes APIからJSONを取得するヘルパー
+function fetchJSONWithRedirects(url) {
     return new Promise((resolve) => {
-        const query = encodeURIComponent(artistName || "Dragon Quest");
-        const url = `https://itunes.apple.com/search?term=${query}&media=music&limit=200`;
-        
         https.get(url, (res) => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                return fetchJSONWithRedirects(res.headers.location).then(resolve);
+            }
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
                 try {
-                    const json = JSON.parse(data);
-                    const tracks = [];
-                    if (json && json.results) {
-                        json.results.forEach(item => {
-                            if (item.previewUrl) {
-                                tracks.push({
-                                    title: item.trackName || "Track",
-                                    artist: item.artistName || artistName,
-                                    previewUrl: item.previewUrl
-                                });
-                            }
-                        });
-                    }
-                    resolve(tracks);
+                    resolve(JSON.parse(data));
                 } catch (e) {
-                    resolve([]);
+                    resolve(null);
                 }
             });
         }).on('error', () => {
-            resolve([]);
+            resolve(null);
         });
     });
 }
 
 app.get('/api/bgm-tracks', async (req, res) => {
     const artist = req.query.artist || "Dragon Quest";
-    let tracks = await fetchITunesTracks(artist);
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&media=music&limit=200`;
     
+    const json = await fetchJSONWithRedirects(url);
+    const tracks = [];
+    
+    if (json && json.results) {
+        json.results.forEach(item => {
+            if (item.previewUrl) {
+                tracks.push({
+                    title: item.trackName || "Track",
+                    artist: item.artistName || artist,
+                    previewUrl: item.previewUrl
+                });
+            }
+        });
+    }
+    
+    // 曲が取得できなかった場合のフォールバック
     if (tracks.length < 5) {
         for (let i = 1; i <= 20; i++) {
             tracks.push({
@@ -78,7 +80,6 @@ app.get('/api/bgm-tracks', async (req, res) => {
     res.json({ tracks: extendedTracks.slice(0, 200) });
 });
 
-// Socket.io リアルタイム通信設定
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
