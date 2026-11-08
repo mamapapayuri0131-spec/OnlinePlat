@@ -1,7 +1,7 @@
 {
   "name": "online-plat",
   "version": "1.0.0",
-  "description": "OnlinePlat - 2D Multiplayer Platformer with Python & Node.js",
+  "description": "OnlinePlat - 2D Multiplayer Platformer",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

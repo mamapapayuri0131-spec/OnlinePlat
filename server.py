@@ -2,12 +2,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 import requests
 import random
+import os
 
 app = FastAPI(title="OnlinePlat Python API")
 
 @app.get("/api/bgm-tracks")
 def get_bgm_tracks():
-    """iTunes API経由でドラクエやUndertale風のトラックを最大200曲取得"""
     queries = ["Dragon Quest game soundtrack", "Undertale OST", "RPG game music", "Chiptune game soundtrack"]
     tracks = []
     
@@ -28,12 +28,11 @@ def get_bgm_tracks():
         except Exception:
             pass
 
-    # 件数が少ない場合のフォールバック処理
     if len(tracks) < 20:
         for i in range(50):
             tracks.append({
                 "title": f"Chiptune Theme #{i+1}",
-                "artist": "OnlinePlat Chiptune",
+                "artist": "OnlinePlat",
                 "previewUrl": "https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg",
                 "artwork": ""
             })
@@ -41,7 +40,8 @@ def get_bgm_tracks():
     random.shuffle(tracks)
     return {"tracks": tracks[:200]}
 
-app.mount("/", StaticFiles(directory="public", html=True), name="public")
+# 同じ階層のファイルをマウント
+app.mount("/", StaticFiles(directory=os.path.dirname(__file__), html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

@@ -7,25 +7,21 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static(path.join(__dirname, 'public')));
+// 同じ階層（ルート）のファイルを静的配信
+app.use(express.static(path.join(__dirname)));
 
 const rooms = {};
 
 io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
-
     socket.on('join_room', ({ mode, roomCode, playerData }) => {
         let targetRoom = mode === 'private' ? roomCode : (mode === 'online' ? 'public_main' : 'offline_' + socket.id);
         socket.join(targetRoom);
         socket.room = targetRoom;
-        socket.playerData = playerData || { name: 'Player', x: 100, y: 100, color: '#3b82f6' };
+        socket.playerData = playerData || { name: 'Player', x: 100, y: 300, color: '#38bdf8' };
 
-        if (!rooms[targetRoom]) {
-            rooms[targetRoom] = {};
-        }
+        if (!rooms[targetRoom]) rooms[targetRoom] = {};
         rooms[targetRoom][socket.id] = socket.playerData;
 
-        // 部屋に参加している全員にプレイヤー一覧を共有
         io.to(targetRoom).emit('update_players', rooms[targetRoom]);
     });
 
@@ -36,13 +32,11 @@ io.on('connection', (socket) => {
         }
     });
 
-    // WebRTC シグナリング (個別の相手指定対応)
     socket.on('voice_signal', ({ to, signal, from, targetOnly }) => {
         io.to(to).emit('voice_signal', { signal, from, targetOnly });
     });
 
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
         if (socket.room && rooms[socket.room]) {
             delete rooms[socket.room][socket.id];
             if (Object.keys(rooms[socket.room]).length === 0) {
