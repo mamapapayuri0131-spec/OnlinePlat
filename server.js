@@ -6,107 +6,73 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-    pingTimeout: 5000,
-    pingInterval: 10000
-});
+const io = new Server(server);
 
 app.use(express.static(path.join(__dirname)));
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 const rooms = {};
 
-// リダイレクト追従付きiTunes APIプロキシ（最大200曲取得）
-function fetchJSONWithRedirects(url) {
-    return new Promise((resolve) => {
-        https.get(url, (res) => {
-            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                return fetchJSONWithRedirects(res.headers.location).then(resolve);
-            }
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                try { resolve(JSON.parse(data)); } catch (e) { resolve(null); }
-            });
-        }).on('error', () => resolve(null));
-    });
+function fetchTracks(url, resolve) {
+    https.get(url, (res) => {
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+            return fetchTracks(res.headers.location, resolve);
+        }
+        let data = '';
+        res.on('data', c => data += c);
+        res.on('end', () => {
+            try {
+                const json = JSON.parse(data);
+                const tracks = (json.results || []).filter(i => i.previewUrl).map(i => ({ title: i.trackName, artist: i.artistName, previewUrl: i.previewUrl }));
+                resolve(tracks);
+            } catch { resolve([]); }
+        });
+    }).on('error', () => resolve([]));
 }
 
 app.get('/api/bgm-tracks', async (req, res) => {
     const artist = req.query.artist || "Dragon Quest";
     const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&media=music&limit=200`;
-    
-    const json = await fetchJSONWithRedirects(url);
-    const tracks = [];
-    
-    if (json && json.results) {
-        json.results.forEach(item => {
-            if (item.previewUrl) {
-                tracks.push({ title: item.trackName || "Track", artist: item.artistName || artist, previewUrl: item.previewUrl });
-            }
-        });
-    }
+    let tracks = await new Promise(r => fetchTracks(url, r));
     
     if (tracks.length < 5) {
-        for (let i = 1; i <= 20; i++) {
-            tracks.push({ title: `${artist} Theme ${i}`, artist: artist, previewUrl: "https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg" });
-        }
+        for (let i = 1; i <= 20; i++) tracks.push({ title: `Theme ${i}`, artist, previewUrl: "https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg" });
     }
-    
-    let extended = [];
-    while (extended.length < 200 && tracks.length > 0) {
-        tracks.forEach(t => extended.push({...t}));
-    }
-    extended.sort(() => Math.random() - 0.5);
-    
-    res.json({ tracks: extended.slice(0, 200) });
+    let ext = [];
+    while (ext.length < 200 && tracks.length) tracks.forEach(t => ext.push({...t}));
+    ext.sort(() => Math.random() - 0.5);
+    res.json({ tracks: ext.slice(0, 200) });
 });
 
 io.on('connection', (socket) => {
     socket.on('join_room', ({ mode, roomCode, playerData }) => {
-        let targetRoom = mode === 'private' ? roomCode : (mode === 'online' ? 'public_main' : 'offline_' + socket.id);
-        socket.join(targetRoom);
-        socket.room = targetRoom;
-        socket.playerData = playerData || { name: 'Player', x: 100, y: 1500, color: '#38bdf8', emote: '' };
-
-        if (!rooms[targetRoom]) rooms[targetRoom] = {};
-        rooms[targetRoom][socket.id] = socket.playerData;
-
-        io.to(targetRoom).emit('update_players', rooms[targetRoom]);
+        const room = mode === 'private' ? roomCode : (mode === 'online' ? 'public_main' : 'off_' + socket.id);
+        socket.room = room;
+        socket.join(room);
+        rooms[room] = rooms[room] || {};
+        rooms[room][socket.id] = playerData;
+        io.to(room).emit('update_players', rooms[room]);
     });
-
     socket.on('player_move', (data) => {
-        if (socket.room && rooms[socket.room] && rooms[socket.room][socket.id]) {
-            rooms[socket.room][socket.id] = { ...rooms[socket.room][socket.id], ...data };
-            socket.to(socket.room).emit('player_moved', { id: socket.id, data: rooms[socket.room][socket.id] });
+        if (socket.room && rooms[socket.room]?.[socket.id]) {
+            Object.assign(rooms[socket.room][socket.id], data);
+            socket.to(socket.room).emit('player_moved', { id: socket.id, data });
         }
     });
-
-    socket.on('player_emote', (emoteText) => {
-        if (socket.room && rooms[socket.room] && rooms[socket.room][socket.id]) {
-            rooms[socket.room][socket.id].emote = emoteText;
-            io.to(targetRoom = socket.room).emit('update_players', rooms[socket.room]);
+    socket.on('player_emote', (emote) => {
+        if (socket.room && rooms[socket.room]?.[socket.id]) {
+            rooms[socket.room][socket.id].emote = emote;
+            io.to(socket.room).emit('update_players', rooms[socket.room]);
         }
     });
-
-    socket.on('voice_signal', ({ to, signal, from, targetOnly }) => {
-        io.to(to).emit('voice_signal', { signal, from, targetOnly });
-    });
-
+    socket.on('voice_signal', (d) => io.to(d.to).emit('voice_signal', d));
     socket.on('disconnect', () => {
         if (socket.room && rooms[socket.room]) {
             delete rooms[socket.room][socket.id];
-            if (Object.keys(rooms[socket.room]).length === 0) {
-                delete rooms[socket.room];
-            } else {
-                io.to(socket.room).emit('update_players', rooms[socket.room]);
-            }
+            if (!Object.keys(rooms[socket.room]).length) delete rooms[socket.room];
+            else io.to(socket.room).emit('update_players', rooms[socket.room]);
         }
     });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(process.env.PORT || 3000);
