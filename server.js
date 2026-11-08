@@ -48,7 +48,9 @@ io.on('connection', socket => {
             io.to(socket.room).emit('update_players', rooms[socket.room]);
         }
     });
-    socket.on('voice_signal', d => io.to(d.to).emit('voice_signal', d));
+    socket.on('voice_signal', d => {
+        if (d.to) io.to(d.to).emit('voice_signal', d);
+    });
     socket.on('disconnect', () => {
         if (socket.room && rooms[socket.room]) {
             delete rooms[socket.room][socket.id];
