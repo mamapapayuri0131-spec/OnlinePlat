@@ -20,7 +20,8 @@ function fetchTracks(url, resolve) {
 
 app.get('/api/bgm-tracks', async (req, res) => {
     const artist = req.query.artist || "Dragon Quest";
-    let tracks = await new Promise(r => fetchTracks(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&country=JP&media=music&limit=200`, r));
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&country=JP&lang=ja_jp&media=music&limit=200`;
+    let tracks = await new Promise(r => fetchTracks(url, r));
     if (tracks.length < 5) for (let i = 1; i <= 20; i++) tracks.push({ title: `Theme ${i}`, artist, previewUrl: "https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg" });
     let ext = [];
     while (ext.length < 200 && tracks.length) tracks.forEach(t => ext.push({...t}));
@@ -41,9 +42,9 @@ io.on('connection', socket => {
             socket.to(socket.room).emit('player_moved', { id: socket.id, data });
         }
     });
-    socket.on('player_emote', emote => {
+    socket.on('player_chat', chatText => {
         if (socket.room && rooms[socket.room]?.[socket.id]) {
-            rooms[socket.room][socket.id].emote = emote;
+            rooms[socket.room][socket.id].chat = String(chatText).slice(0, 50);
             io.to(socket.room).emit('update_players', rooms[socket.room]);
         }
     });
