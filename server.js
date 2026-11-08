@@ -60,7 +60,6 @@ app.get('/api/bgm-tracks', async (req, res) => {
         });
     }
     
-    // 曲が取得できなかった場合のフォールバック
     if (tracks.length < 5) {
         for (let i = 1; i <= 20; i++) {
             tracks.push({
