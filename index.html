@@ -63,30 +63,30 @@
             ※画面下ボタンや左下の「エモートリスト」も使用可能！
         </div>
         <input type="text" id="player-name" placeholder="プレイヤー名" value="Player">
-        <button class="btn" onclick="startOfflineMode()">オフライン</button>
-        <button class="btn" onclick="startOnlineMode()">オンライン</button>
-        <button class="btn btn-secondary" onclick="showPrivateMenu()">プライベート</button>
+        <button class="btn" id="btn-offline">オフライン</button>
+        <button class="btn" id="btn-online">オンライン</button>
+        <button class="btn btn-secondary" id="btn-private-menu">プライベート</button>
     </div>
 
     <div id="private-screen" class="screen hidden">
         <h1>プライベート部屋</h1>
         <input type="text" id="room-code-input" placeholder="部屋番号 (例: 1234)">
-        <button class="btn" onclick="startPrivateMode()">ホスト / 入出</button>
-        <button class="btn btn-secondary" onclick="backToMain()">戻る</button>
+        <button class="btn" id="btn-private-join">ホスト / 入出</button>
+        <button class="btn btn-secondary" id="btn-back">戻る</button>
     </div>
 
     <div id="game-ui">
         <header>
             <div id="room-info" style="font-weight: bold; color: #38bdf8;">OnlinePlat</div>
             <div class="header-controls">
-                <button id="mic-toggle-btn" class="mic-switch" onclick="toggleMic()">マイク OFF</button>
-                <button class="icon-btn" onclick="toggleTargetList()">👥 送信先</button>
-                <button class="icon-btn" onclick="openSettings()">⚙️ 設定</button>
+                <button id="mic-toggle-btn" class="mic-switch">マイク OFF</button>
+                <button class="icon-btn" id="btn-target-toggle">👥 送信先</button>
+                <button class="icon-btn" id="btn-settings-open">⚙️ 設定</button>
 
                 <div id="target-voice-container">
                     <h4>ボイス送信先選択</h4>
                     <div class="target-item">
-                        <input type="checkbox" id="select-all-target" checked onchange="toggleAllTargets(this)">
+                        <input type="checkbox" id="select-all-target" checked>
                         <label for="select-all-target">全員に送信</label>
                     </div>
                     <div id="target-checkboxes"></div>
@@ -96,11 +96,11 @@
 
         <div id="emote-panel">
             <h4>💬 エモート</h4>
-            <button class="emote-btn" onclick="sendEmote('👍 ナイス！')">👍 ナイス！</button>
-            <button class="emote-btn" onclick="sendEmote('😂 草w')">😂 草w</button>
-            <button class="emote-btn" onclick="sendEmote('🔥 やる気！')">🔥 やる気！</button>
-            <button class="emote-btn" onclick="sendEmote('💖 ありがと')">💖 ありがと</button>
-            <button class="emote-btn" onclick="sendEmote('👋 お疲れ！')">👋 お疲れ！</button>
+            <button class="emote-btn" data-emote="👍 ナイス！">👍 ナイス！</button>
+            <button class="emote-btn" data-emote="😂 草w">😂 草w</button>
+            <button class="emote-btn" data-emote="🔥 やる気！">🔥 やる気！</button>
+            <button class="emote-btn" data-emote="💖 ありがと">💖 ありがと</button>
+            <button class="emote-btn" data-emote="👋 お疲れ！">👋 お疲れ！</button>
         </div>
 
         <canvas id="gameCanvas"></canvas>
@@ -122,26 +122,26 @@
             <div class="setting-row">
                 <label>BGM アーティスト名 (200曲検索):</label>
                 <input type="text" id="artist-input" value="Dragon Quest" style="width: 100%;">
-                <button class="btn" style="width: 100%; padding: 10px; margin-top: 5px;" onclick="changeArtist()">アーティスト変更して更新</button>
+                <button class="btn" id="btn-change-artist" style="width: 100%; padding: 10px; margin-top: 5px;">アーティスト変更して更新</button>
             </div>
             <div class="setting-row">
                 <label>BGM 音量: <span id="bgm-val">50</span>%</label>
-                <input type="range" min="0" max="100" value="50" oninput="updateBgmVolume(this.value)">
+                <input type="range" id="range-bgm" min="0" max="100" value="50">
             </div>
             <div class="setting-row">
                 <label>効果音音量: <span id="sfx-val">70</span>%</label>
-                <input type="range" min="0" max="100" value="70" oninput="updateSfxVolume(this.value)">
+                <input type="range" id="range-sfx" min="0" max="100" value="70">
             </div>
             <div class="setting-row">
                 <label>マイク検知量: <span id="mic-sens-val">30</span></label>
-                <input type="range" min="0" max="100" value="30" oninput="updateMicSensitivity(this.value)">
+                <input type="range" id="range-mic" min="0" max="100" value="30">
             </div>
             <div class="setting-row">
                 <label>相手の声の音量: <span id="voice-vol-val">80</span>%</label>
-                <input type="range" min="0" max="100" value="80" oninput="updateVoiceVolume(this.value)">
+                <input type="range" id="range-voice" min="0" max="100" value="80">
             </div>
-            <button class="btn btn-secondary" style="width: 100%;" onclick="closeSettings()">閉じる</button>
-            <button class="btn" style="background: #ef4444; width: 100%;" onclick="location.reload()">ゲームを退出</button>
+            <button class="btn btn-secondary" id="btn-settings-close" style="width: 100%;">閉じる</button>
+            <button class="btn" id="btn-exit" style="background: #ef4444; width: 100%;">ゲームを退出</button>
         </div>
     </div>
 
@@ -196,8 +196,11 @@
         let myEmote = '';
         let emoteTimer = null;
 
+        // すべてのボタンに確実にイベントを紐付け
         window.addEventListener('DOMContentLoaded', () => {
             initBGM(currentArtist);
+
+            // ユーザー操作によるBGMアンロック
             const startAudio = () => {
                 const player = document.getElementById('bgm-player');
                 if (player.paused && bgmTracks.length > 0) {
@@ -208,6 +211,42 @@
             };
             window.addEventListener('click', startAudio);
             window.addEventListener('touchstart', startAudio);
+
+            // ボタンのイベントリスナー登録
+            document.getElementById('btn-offline').addEventListener('click', () => selectMode('offline'));
+            document.getElementById('btn-online').addEventListener('click', () => selectMode('online'));
+            document.getElementById('btn-private-menu').addEventListener('click', () => {
+                document.getElementById('mode-screen').classList.add('hidden');
+                document.getElementById('private-screen').classList.remove('hidden');
+            });
+            document.getElementById('btn-back').addEventListener('click', () => {
+                document.getElementById('private-screen').classList.add('hidden');
+                document.getElementById('mode-screen').classList.remove('hidden');
+            });
+            document.getElementById('btn-private-join').addEventListener('click', () => {
+                const code = document.getElementById('room-code-input').value.trim();
+                if (!code) { alert('部屋番号を入力してください'); return; }
+                roomCode = code;
+                gameMode = 'private';
+                startGame();
+            });
+
+            document.getElementById('mic-toggle-btn').addEventListener('click', toggleMic);
+            document.getElementById('btn-target-toggle').addEventListener('click', toggleTargetList);
+            document.getElementById('btn-settings-open').addEventListener('click', () => document.getElementById('settings-modal').style.display = 'flex');
+            document.getElementById('btn-settings-close').addEventListener('click', () => document.getElementById('settings-modal').style.display = 'none');
+            document.getElementById('btn-exit').addEventListener('click', () => location.reload());
+            document.getElementById('select-all-target').addEventListener('change', (e) => toggleAllTargets(e.target));
+            document.getElementById('btn-change-artist').addEventListener('click', changeArtist);
+
+            document.querySelectorAll('.emote-btn').forEach(btn => {
+                btn.addEventListener('click', () => sendEmote(btn.getAttribute('data-emote')));
+            });
+
+            document.getElementById('range-bgm').addEventListener('input', (e) => updateBgmVolume(e.target.value));
+            document.getElementById('range-sfx').addEventListener('input', (e) => updateSfxVolume(e.target.value));
+            document.getElementById('range-mic').addEventListener('input', (e) => updateMicSensitivity(e.target.value));
+            document.getElementById('range-voice').addEventListener('input', (e) => updateVoiceVolume(e.target.value));
         });
 
         async function initBGM(artist) {
@@ -265,23 +304,8 @@
             document.querySelectorAll('audio.peer-audio').forEach(el => el.volume = voiceVolume);
         }
 
-        function showPrivateMenu() {
-            document.getElementById('mode-screen').classList.add('hidden');
-            document.getElementById('private-screen').classList.remove('hidden');
-        }
-
-        function backToMain() {
-            document.getElementById('private-screen').classList.add('hidden');
-            document.getElementById('mode-screen').classList.remove('hidden');
-        }
-
-        function startOfflineMode() { gameMode = 'offline'; startGame(); }
-        function startOnlineMode() { gameMode = 'online'; startGame(); }
-        function startPrivateMode() {
-            const code = document.getElementById('room-code-input').value.trim();
-            if (!code) { alert('部屋番号を入力してください'); return; }
-            roomCode = code;
-            gameMode = 'private';
+        function selectMode(mode) {
+            gameMode = mode;
             startGame();
         }
 
@@ -341,9 +365,7 @@
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 localStream.getAudioTracks()[0].enabled = false;
-            } catch (e) {
-                console.log('Mic permission denied or unavailable:', e);
-            }
+            } catch (e) {}
         }
 
         function toggleMic() {
@@ -352,38 +374,4 @@
                     localStream = stream;
                     localStream.getAudioTracks()[0].enabled = true;
                     micActive = true;
-                    const btn = document.getElementById('mic-toggle-btn');
-                    btn.innerText = 'マイク ON';
-                    btn.classList.add('active');
-                    syncVoiceConnections();
-                }).catch(err => {
-                    alert('ブラウザの設定でマイクの使用がブロックされています。アドレスバーのマイクアイコンから許可してください。');
-                });
-                return; 
-            }
-            micActive = !micActive;
-            localStream.getAudioTracks()[0].enabled = micActive;
-            const btn = document.getElementById('mic-toggle-btn');
-            btn.innerText = micActive ? 'マイク ON' : 'マイク OFF';
-            btn.classList.toggle('active', micActive);
-        }
-
-        function createPeerConnection(id) {
-            const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
-            if (localStream) {
-                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-            }
-            pc.onicecandidate = event => {
-                if (event.candidate) {
-                    socket.emit('voice_signal', { to: id, signal: { candidate: event.candidate }, from: myId, targetOnly: selectedVoiceTargets });
-                }
-            };
-            pc.ontrack = event => {
-                let audio = document.getElementById('audio_' + id);
-                if (!audio) {
-                    audio = document.createElement('audio');
-                    audio.id = 'audio_' + id;
-                    audio.className = 'peer-audio';
-                    audio.autoplay = true;
-                    audio.volume = voiceVolume;
-                    docu
+                    const btn = document.getElementBy
