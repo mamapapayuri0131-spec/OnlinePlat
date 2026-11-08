@@ -9,34 +9,36 @@
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background: #0f172a; color: #f8fafc; font-family: sans-serif; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0f172a; z-index: 10; padding: 20px; }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0f172a; z-index: 10; padding: 20px; text-align: center; }
         .screen.hidden { display: none !important; }
         
-        h1 { font-size: 2.5rem; margin-bottom: 20px; color: #38bdf8; }
-        .btn { background: #2563eb; color: white; border: none; padding: 12px 24px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; margin: 8px; font-weight: bold; }
+        h1 { font-size: 2.5rem; margin-bottom: 10px; color: #38bdf8; }
+        .instructions { font-size: 0.95rem; color: #94a3b8; margin-bottom: 20px; line-height: 1.5; background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #475569; max-width: 320px; text-align: left; }
+        .btn { background: #2563eb; color: white; border: none; padding: 12px 24px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; margin: 6px; font-weight: bold; width: 250px; }
         .btn:hover { background: #1d4ed8; }
         .btn-secondary { background: #475569; }
         
-        input, select { padding: 12px; font-size: 1rem; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: white; margin: 8px; width: 250px; text-align: center; }
+        input { padding: 12px; font-size: 1rem; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: white; margin: 6px; width: 250px; text-align: center; }
         
         #game-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid #334155; z-index: 5; }
-        .header-controls { display: flex; align-items: center; gap: 10px; }
+        .header-controls { display: flex; align-items: center; gap: 10px; position: relative; }
         
         .mic-switch { background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
         .mic-switch.active { background: #22c55e; }
         
         .icon-btn { background: #334155; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 1rem; }
         
-        #target-voice-container { position: absolute; top: 60px; right: 20px; background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 10px; width: 220px; max-height: 150px; overflow-y: auto; z-index: 20; display: none; }
+        #target-voice-container { position: absolute; top: 50px; right: 0; background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 10px; width: 220px; max-height: 150px; overflow-y: auto; z-index: 20; display: none; }
         #target-voice-container h4 { font-size: 0.85rem; margin-bottom: 6px; color: #94a3b8; border-bottom: 1px solid #334155; padding-bottom: 4px; }
         .target-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; margin: 4px 0; }
 
         canvas { flex-grow: 1; display: block; background: #1e293b; }
 
-        #mobile-controls { position: absolute; bottom: 20px; width: 100%; display: none; justify-content: space-between; padding: 0 30px; z-index: 5; pointer-events: none; }
+        #mobile-controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; z-index: 5; pointer-events: none; }
         .touch-group { display: flex; gap: 15px; pointer-events: auto; }
-        .touch-btn { width: 70px; height: 70px; background: rgba(51, 65, 85, 0.8); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; color: white; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; }
+        .touch-btn { width: 70px; height: 70px; background: rgba(51, 65, 85, 0.85); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; color: white; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+        .touch-btn:active { background: rgba(37, 99, 235, 0.9); }
 
         #settings-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 30; }
         .modal-content { background: #1e293b; padding: 30px; border-radius: 12px; width: 380px; border: 1px solid #475569; display: flex; flex-direction: column; gap: 15px; }
@@ -45,25 +47,26 @@
 </head>
 <body>
 
-    <!-- モード選択画面 -->
     <div id="mode-screen" class="screen">
         <h1>OnlinePlat</h1>
+        <div class="instructions">
+            <b>【操作方法】</b><br>
+            ・<b>キーボード</b>: A/D または ◀/▶ キーで左右移動、Space / W / ▲ キーでジャンプ<br>
+            ・<b>画面ボタン</b>: 画面下のボタンをマウスやタッチで操作可能
+        </div>
         <input type="text" id="player-name" placeholder="プレイヤー名" value="Player">
         <button class="btn" onclick="selectMode('offline')">オフライン</button>
-        <button class="btn" onclick="selectMode('online')">オンライン (パブリック)</button>
+        <button class="btn" onclick="selectMode('online')">オンライン</button>
         <button class="btn btn-secondary" onclick="showPrivateMenu()">プライベート</button>
     </div>
 
-    <!-- プライベートメニュー -->
     <div id="private-screen" class="screen hidden">
         <h1>プライベート部屋</h1>
         <input type="text" id="room-code-input" placeholder="部屋番号 (例: 1234)">
-        <button class="btn" onclick="joinPrivate('host')">ホスト (部屋を作成)</button>
-        <button class="btn" onclick="joinPrivate('join')">入出 (部屋に参加)</button>
+        <button class="btn" onclick="joinPrivate()">ホスト / 入出</button>
         <button class="btn btn-secondary" onclick="backToMain()">戻る</button>
     </div>
 
-    <!-- ゲームUI -->
     <div id="game-ui">
         <header>
             <div id="room-info" style="font-weight: bold; color: #38bdf8;">OnlinePlat</div>
@@ -71,34 +74,31 @@
                 <button id="mic-toggle-btn" class="mic-switch" onclick="toggleMic()">マイク OFF</button>
                 <button class="icon-btn" onclick="toggleTargetList()">👥 送信先</button>
                 <button class="icon-btn" onclick="openSettings()">⚙️ 設定</button>
+
+                <div id="target-voice-container">
+                    <h4>ボイス送信先選択</h4>
+                    <div class="target-item">
+                        <input type="checkbox" id="select-all-target" checked onchange="toggleAllTargets(this)">
+                        <label for="select-all-target">全員に送信</label>
+                    </div>
+                    <div id="target-checkboxes"></div>
+                </div>
             </div>
         </header>
 
-        <!-- ボイス送信先選択（設定ボタンのすぐ下に配置されるスクロールリスト） -->
-        <div id="target-voice-container">
-            <h4>ボイス送信先選択</h4>
-            <div class="target-item">
-                <input type="checkbox" id="select-all-target" checked onchange="toggleAllTargets(this)">
-                <label for="select-all-target">全員に送信</label>
-            </div>
-            <div id="target-checkboxes"></div>
-        </div>
-
         <canvas id="gameCanvas"></canvas>
 
-        <!-- スマホ用タッチコントローラー（スマホアクセス時に自動展開） -->
         <div id="mobile-controls">
             <div class="touch-group">
-                <div class="touch-btn" ontouchstart="keys.ArrowLeft=true" ontouchend="keys.ArrowLeft=false">◀</div>
-                <div class="touch-btn" ontouchstart="keys.ArrowRight=true" ontouchend="keys.ArrowRight=false">▶</div>
+                <div class="touch-btn" id="btn-left">◀</div>
+                <div class="touch-btn" id="btn-right">▶</div>
             </div>
             <div class="touch-group">
-                <div class="touch-btn" ontouchstart="keys.Space=true" ontouchend="keys.Space=false">▲</div>
+                <div class="touch-btn" id="btn-jump">▲</div>
             </div>
         </div>
     </div>
 
-    <!-- 設定モーダル -->
     <div id="settings-modal">
         <div class="modal-content">
             <h3 style="color: #38bdf8;">設定</h3>
@@ -107,11 +107,11 @@
                 <input type="range" min="0" max="100" value="50" oninput="updateBgmVolume(this.value)">
             </div>
             <div class="setting-row">
-                <label>効果音 (SFX) 音量: <span id="sfx-val">70</span>%</label>
+                <label>効果音音量: <span id="sfx-val">70</span>%</label>
                 <input type="range" min="0" max="100" value="70" oninput="updateSfxVolume(this.value)">
             </div>
             <div class="setting-row">
-                <label>マイク感度: <span id="mic-sens-val">30</span></label>
+                <label>マイク検知量: <span id="mic-sens-val">30</span></label>
                 <input type="range" min="0" max="100" value="30" oninput="updateMicSensitivity(this.value)">
             </div>
             <div class="setting-row">
@@ -119,18 +119,32 @@
                 <input type="range" min="0" max="100" value="80" oninput="updateVoiceVolume(this.value)">
             </div>
             <button class="btn btn-secondary" onclick="closeSettings()">閉じる</button>
-            <button class="btn" style="background: #ef4444;" onclick="location.reload()">退出</button>
+            <button class="btn" style="background: #ef4444;" onclick="location.reload()">ゲームを退出</button>
         </div>
     </div>
 
     <audio id="bgm-player" autoplay></audio>
 
     <script>
-        // デバイス自動読み取り
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent) || window.innerWidth < 768;
-        if (isMobile) {
-            document.getElementById('mobile-controls').style.display = 'flex';
+        const keys = {};
+
+        window.addEventListener('keydown', e => { keys[e.code] = true; keys[e.key.toLowerCase()] = true; });
+        window.addEventListener('keyup', e => { keys[e.code] = false; keys[e.key.toLowerCase()] = false; });
+
+        function bindButton(id, keyName) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const start = (e) => { e.preventDefault(); keys[keyName] = true; };
+            const end = (e) => { e.preventDefault(); keys[keyName] = false; };
+            el.addEventListener('mousedown', start);
+            el.addEventListener('mouseup', end);
+            el.addEventListener('touchstart', start);
+            el.addEventListener('touchend', end);
         }
+
+        bindButton('btn-left', 'ArrowLeft');
+        bindButton('btn-right', 'ArrowRight');
+        bindButton('btn-jump', 'Space');
 
         let socket = null;
         let gameMode = 'offline';
@@ -139,7 +153,6 @@
         let players = {};
         let myId = null;
 
-        // BGM 200曲自動取得＆シャッフル再生
         let bgmTracks = [];
         let currentTrackIndex = 0;
         let bgmVolume = 0.5;
@@ -155,7 +168,7 @@
                 const data = await res.json();
                 bgmTracks = data.tracks || [];
                 if (bgmTracks.length > 0) playNextBgm();
-            } catch (e) { console.log('BGM load error', e); }
+            } catch (e) {}
         }
 
         const bgmPlayer = document.getElementById('bgm-player');
@@ -168,7 +181,15 @@
             if (bgmTracks.length === 0) return;
             bgmPlayer.src = bgmTracks[currentTrackIndex].previewUrl;
             bgmPlayer.volume = bgmVolume;
-            bgmPlayer.play().catch(e => {});
+            bgmPlayer.play().catch(e => {
+                const resumeBgm = () => {
+                    bgmPlayer.play();
+                    window.removeEventListener('click', resumeBgm);
+                    window.removeEventListener('keydown', resumeBgm);
+                };
+                window.addEventListener('click', resumeBgm);
+                window.addEventListener('keydown', resumeBgm);
+            });
         }
 
         function updateBgmVolume(val) { bgmVolume = val / 100; bgmPlayer.volume = bgmVolume; document.getElementById('bgm-val').innerText = val; }
@@ -196,7 +217,7 @@
             document.getElementById('mode-screen').classList.remove('hidden');
         }
 
-        function joinPrivate(type) {
+        function joinPrivate() {
             const code = document.getElementById('room-code-input').value;
             if (!code) { alert('部屋番号を入力してください'); return; }
             roomCode = code;
@@ -221,14 +242,29 @@
             socket = io();
             socket.on('connect', () => {
                 myId = socket.id;
-                socket.emit('join_room', { mode: gameMode, roomCode: roomCode, playerData: { name: playerName, x: 100, y: 300, color: '#38bdf8' } });
+                socket.emit('join_room', { mode: gameMode, roomCode: roomCode, playerData: { name: playerName, x: 100, y: 100, color: '#38bdf8' } });
             });
             socket.on('update_players', (serverPlayers) => {
                 players = serverPlayers;
                 updateTargetCheckboxes();
+                syncVoiceConnections();
             });
             socket.on('player_moved', ({ id, data }) => {
                 if (players[id]) { players[id].x = data.x; players[id].y = data.y; }
+            });
+            socket.on('voice_signal', async ({ signal, from, targetOnly }) => {
+                if (targetOnly && targetOnly !== 'all' && !targetOnly.includes(myId)) return;
+                let pc = peerConnections[from] || createPeerConnection(from);
+                if (signal.sdp) {
+                    await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                    if (signal.sdp.type === 'offer') {
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        socket.emit('voice_signal', { to: from, signal: { sdp: pc.localDescription }, from: myId, targetOnly: selectedVoiceTargets });
+                    }
+                } else if (signal.candidate) {
+                    await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                }
             });
         }
 
@@ -240,12 +276,50 @@
         }
 
         function toggleMic() {
-            if (!localStream) { alert('マイクが検出されません'); return; }
+            if (!localStream) { alert('マイクが許可されていないか接続されていません。'); return; }
             micActive = !micActive;
             localStream.getAudioTracks()[0].enabled = micActive;
             const btn = document.getElementById('mic-toggle-btn');
             btn.innerText = micActive ? 'マイク ON' : 'マイク OFF';
             btn.classList.toggle('active', micActive);
+        }
+
+        function createPeerConnection(id) {
+            const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+            if (localStream) {
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            }
+            pc.onicecandidate = event => {
+                if (event.candidate) {
+                    socket.emit('voice_signal', { to: id, signal: { candidate: event.candidate }, from: myId, targetOnly: selectedVoiceTargets });
+                }
+            };
+            pc.ontrack = event => {
+                let audio = document.getElementById('audio_' + id);
+                if (!audio) {
+                    audio = document.createElement('audio');
+                    audio.id = 'audio_' + id;
+                    audio.className = 'peer-audio';
+                    audio.autoplay = true;
+                    audio.volume = voiceVolume;
+                    document.body.appendChild(audio);
+                }
+                audio.srcObject = event.streams[0];
+            };
+            peerConnections[id] = pc;
+            return pc;
+        }
+
+        async function syncVoiceConnections() {
+            if (!socket) return;
+            for (let id in players) {
+                if (id !== myId && !peerConnections[id]) {
+                    let pc = createPeerConnection(id);
+                    const offer = await pc.createOffer();
+                    await pc.setLocalDescription(offer);
+                    socket.emit('voice_signal', { to: id, signal: { sdp: pc.localDescription }, from: myId, targetOnly: selectedVoiceTargets });
+                }
+            }
         }
 
         function toggleTargetList() {
@@ -278,10 +352,6 @@
             selectedVoiceTargets = Array.from(chks).map(c => c.value);
         }
 
-        const keys = {};
-        window.addEventListener('keydown', e => { keys[e.code] = true; });
-        window.addEventListener('keyup', e => { keys[e.code] = false; });
-
         function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
         function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
 
@@ -292,23 +362,23 @@
             window.addEventListener('resize', resize);
             resize();
 
-            let myX = 100, myY = 300, vx = 0, vy = 0;
-            const speed = 5, jumpForce = -12, gravity = 0.6;
+            let myX = 100, myY = 100, vx = 0, vy = 0;
+            const speed = 6, jumpForce = -12, gravity = 0.55;
             let grounded = false;
 
             const platforms = [
-                { x: 0, y: 500, w: 2000, h: 50 },
+                { x: -500, y: 500, w: 3500, h: 50 },
                 { x: 300, y: 380, w: 200, h: 20 },
                 { x: 600, y: 280, w: 200, h: 20 },
                 { x: 900, y: 200, w: 250, h: 20 }
             ];
 
             function loop() {
-                if (keys['ArrowLeft'] || keys['KeyA']) vx = -speed;
-                else if (keys['ArrowRight'] || keys['KeyD']) vx = speed;
+                if (keys['ArrowLeft'] || keys['KeyA'] || keys['a']) vx = -speed;
+                else if (keys['ArrowRight'] || keys['KeyD'] || keys['d']) vx = speed;
                 else vx = 0;
 
-                if ((keys['ArrowUp'] || keys['KeyW'] || keys['Space']) && grounded) {
+                if ((keys['ArrowUp'] || keys['KeyW'] || keys['w'] || keys['Space'] || keys[' ']) && grounded) {
                     vy = jumpForce;
                     grounded = false;
                 }
@@ -319,20 +389,27 @@
 
                 grounded = false;
                 platforms.forEach(p => {
-                    if (myX + 30 > p.x && myX < p.x + p.w && myY + 40 > p.y && myY + 40 < p.y + p.h + vy) {
+                    if (myX + 30 > p.x && myX < p.x + p.w && myY + 40 >= p.y && myY + 40 <= p.y + p.h + 15 && vy >= 0) {
                         myY = p.y - 40;
                         vy = 0;
                         grounded = true;
                     }
                 });
 
+                // 落下時に確実にリスポーンする判定 (地面より下に落ちたら即リスポーン)
+                if (myY > 700) {
+                    myY = 100;
+                    myX = 100;
+                    vy = 0;
+                    vx = 0;
+                }
+
                 if (socket && socket.connected) {
                     socket.emit('player_move', { x: myX, y: myY });
                 }
 
-                // カメラ追従（自分の移動に合わせて画面移動）
-                const cameraX = myX - canvas.width / 2;
-                const cameraY = myY - canvas.height / 2;
+                const cameraX = myX - canvas.width / 2 + 15;
+                const cameraY = myY - canvas.height / 2 + 20;
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.save();
@@ -341,21 +418,4 @@
                 ctx.fillStyle = '#475569';
                 platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
 
-                for (let id in players) {
-                    const p = players[id];
-                    ctx.fillStyle = (id === myId) ? '#38bdf8' : '#f43f5e';
-                    ctx.fillRect(p.x, p.y, 30, 40);
-                    ctx.fillStyle = 'white';
-                    ctx.font = '12px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(p.name, p.x + 15, p.y - 8);
-                }
-
-                ctx.restore();
-                requestAnimationFrame(loop);
-            }
-            requestAnimationFrame(loop);
-        }
-    </script>
-</body>
-</html>
+                if (players[myId]) 
